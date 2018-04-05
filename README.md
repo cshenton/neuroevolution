@@ -3,6 +3,20 @@
 Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06567.pdf).
 
 
+## ToDo
+
+- pre-seeding weight init
+- master training curve
+- master s3 status reports
+- build, host docker images
+- simple local reporting script
+- cloudformation scripts for first run
+    - num workers
+    - environment
+    - choice of vpc, etc.
+- first run
+
+
 ## Approach
 
 I use a master-worker architecture, with:
@@ -15,11 +29,14 @@ I use a master-worker architecture, with:
     - Swaps out full network weights on each evaluation (without rebuilding network)
     - Sends seeds and their scores back to master
 
+This results in a simpler system than Uber / OpenAIs approach, which uses redis as an intermediary,
+and requires workers to synchronise.
+
 
 ## Deployment
 
 Both master and worker are packaged as docker containers. A single copy of the master is deployed
-on an on-demand EC2 server. The workers are scheduled as tasks on an ECS cluster run on spot
+on an dedicated EC2 server. The workers are scheduled as tasks on an ECS cluster run on spot
 instances. See `deploy/` for cloudformation scripts.
 
 Either pull the containers from docker-hub, or build them yourself:

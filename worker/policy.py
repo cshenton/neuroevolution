@@ -83,7 +83,7 @@ class Policy:
         """
         size = [4434944 + 256*self.n_actions]
         w = np.zeros(size)
-
+        # TODO: proper pre-seeded initialization.
         for s in seeds:
             r = np.random.RandomState(s)
             w += r.normal(0, strength, size=size) # 50ns per float, slow :(
