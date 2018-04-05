@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package neuroevolution;
+
+option go_package = "proto";
+
+// Neuro service exposes basic genetic algorithm for neuro-evolution.
+service Neuro {
+  // Seek returns a new individual to test.
+  rpc Seek() returns (Individual) {}
+  // Show shows the performance of an individual to the server.
+  rpc Show(Evaluation) returns (google.protobuf.Empty) {}
+}
+
+// Individual is a sequence of random seeds used to generate a candidate network.
+message Individual {
+  repeated uint64 seeds = 1;
+}
+
+// Evaluation is an individual and the score that indivual achieved.
+message Evaluation {
+  Individual individual = 1;
+  float score = 2;
+}
