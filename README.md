@@ -28,7 +28,7 @@ for i in range(10):
     done = False
     state = e.reset()
     while not done:
-        action = p.forward(state)
+        action = p.act(state)
         state, reward, done, _ = e.step(action)
         j += 1
     print("episode {} took {} steps".format(i, j))

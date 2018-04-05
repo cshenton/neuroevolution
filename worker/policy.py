@@ -1,4 +1,4 @@
-"""Policy Network class"""
+"""Policy Network class for GA learned policies in the atari domain."""
 
 import numpy as np
 import tensorflow as tf
@@ -8,7 +8,20 @@ ATARI_DIMS = [210, 160, 3]
 
 
 class Policy:
-    """Atari policy network."""
+    """Atari policy network.
+
+    This matches the network architecture from the original DQN paper, but exposes
+    all network weights in a single variable so they can conveniently be swapped
+    out to evaluate different policies.
+
+    Attributes:
+        n_actions (int): Number of actions in the current atari environment.
+        weights (tf.Variable): The global network weights variable.
+        input (tf.Placeholder): The state input placeholder.
+        logits (tf.Tensor): The output policy logits.
+        action (tf.Tensor): A multinomial draw over the policy logits.
+        sess (tf.Session): The session used to run the policy network.
+    """
 
     def __init__(self, n_actions):
         """Creates the policy network graph.
@@ -43,7 +56,7 @@ class Policy:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-    def forward(self, state):
+    def act(self, state):
         """Computes a forward pass through the policy graph, returns an action.
 
         Args:
@@ -59,6 +72,10 @@ class Policy:
 
     def set_weights(self, seeds, strength):
         """Sets the graph weights given a sequence of random seeds to do so.
+
+        Iterates through the seed list, generates a normal draw with the specified
+        mutation strength, and adds it to the weight tensor. Then sets the weight
+        tensor in the tf graph.
 
         Args:
             seeds (list of ints): The list of integer random seeds to use for
