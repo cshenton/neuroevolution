@@ -5,7 +5,7 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- pre-seeding weight init
+- pre-seeding weight init (just need to rethink how it's sequenced)
 - master training curve
 - master s3 status reports
 - build, host docker images
@@ -44,6 +44,11 @@ Either pull the containers from docker-hub, or build them yourself:
 docker build -t cshenton/neuro:worker -f worker/Dockerfile .
 docker build -t cshenton/neuro:master -f master/Dockerfile .
 ```
+
+## Differences
+
+- I use a generationless GA implementation that prevents workers from being blocked.
+-
 
 
 ## Protobufs

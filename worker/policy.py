@@ -30,6 +30,9 @@ class Policy:
         """
         self.n_actions = n_actions
 
+        # Initializer with fixed seed
+        init = tf.contrib.layers.variance_scaling_initializer(seed=42)
+
         # Global weights Variable
         w = tf.Variable(tf.ones([4434944+256*n_actions]), trainable=False)
         conv1 = tf.reshape(w[0:3072], [8, 8, 3, 16])
