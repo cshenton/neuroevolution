@@ -1,6 +1,7 @@
 package master
 
 import (
+	"encoding/json"
 	"math"
 	"math/rand"
 	"sort"
@@ -65,4 +66,12 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 	p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
 	p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
 	return
+}
+
+// Save returns a json []byte with the current population state.
+func (p *Population) Save() (b []byte) {
+	p.Lock()
+	b, _ = json.Marshal(p)
+	p.Unlock()
+	return b
 }
