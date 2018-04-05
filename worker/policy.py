@@ -40,6 +40,9 @@ class Policy:
         self.logits = x
         self.action = tf.multinomial(self.logits, 1)
 
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
+
     def forward(self, state):
         """Computes a forward pass through the policy graph, returns an action.
 
@@ -49,8 +52,7 @@ class Policy:
         Returns:
             action: The chosen integer action.
         """
-        with tf.Session() as sess:
-            a = sess.run(self.action, feed_dict={self.input: np.expand_dims(state, 0)})
+        a = self.sess.run(self.action, feed_dict={self.input: np.expand_dims(state, 0)})
 
         action = a[0][0]
         return action
@@ -67,8 +69,7 @@ class Policy:
         w = np.zeros(size)
 
         for s in seeds:
-            np.random.seed(s)
-            w += np.random.normal(0, strength, size=size)
+            r = np.random.RandomState(s)
+            w += r.normal(0, strength, size=size)
 
-        with tf.Session() as sess:
-            sess.run(self.weights.assign(w))
+        self.sess.run(self.weights.assign(w))
