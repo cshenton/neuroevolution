@@ -17,10 +17,15 @@ def main():
 
     e = gym.make(ENVIRONMENT)
     p = Policy(e.num_actions)
-    c =
 
     while True:
+        # make seek request object
+        # perform seek request
+        # initialise network with random seed sequence
 
+        # evaluate network to get score
+        # construct show request object
+        # perform show request
 
 
 if __name__ == '__main__':
