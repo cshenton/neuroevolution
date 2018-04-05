@@ -86,6 +86,6 @@ class Policy:
 
         for s in seeds:
             r = np.random.RandomState(s)
-            w += r.normal(0, strength, size=size)
+            w += r.normal(0, strength, size=size) # 50ns per float, slow :(
 
         self.sess.run(self.weights.assign(w))

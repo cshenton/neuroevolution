@@ -17,7 +17,8 @@ RUN pip install \
 # Add source and generated code
 WORKDIR /neuro-worker
 ADD worker/ worker/
-ADD proto/ proto/
+ADD proto/neuroevolution_pb2.py proto/neuroevolution_pb2.py
+ADD proto/neuroevolution_pb2_grpc.py proto/neuroevolution_pb2_grpc.py
 
 ENV ENVIRONMENT Pong-v0
 ENV HOST localhost:8080

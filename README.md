@@ -1,49 +1,43 @@
-# neuroevolution
-Replication of Uber Neuroevolution paper
+# Neuroevolution
+
+Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06567.pdf).
 
 
-## How fast is the agent?
+## Approach
 
-```python
-import datetime
-import gym
-import numpy as np
+I use a master-worker architecture, with:
 
-from worker.policy import Policy
+- Golang master
+    - gRPC server that controls the genetic algorithm internals
+    - Sends sequences of seeds (individuals) to workers
+- Python workers
+    - Each has a copy of the policy network and environment
+    - Swaps out full network weights on each evaluation (without rebuilding network)
+    - Sends seeds and their scores back to master
 
-# How long does it take to initialize on a 10 seed individual?
-seeds = np.random.randint(1e8, size=10)
-t = datetime.datetime.now()
-p = Policy(6)
-p.set_weights(seeds, 0.005)
-print("initialization time:", datetime.datetime.now() - t) # 0:00:02.267878
 
-e = gym.make('Pong-v0')
+## Deployment
 
-# How long does it take to do 20k frames (max evaluation length)
-t = datetime.datetime.now()
+Both master and worker are packaged as docker containers. A single copy of the master is deployed
+on an on-demand EC2 server. The workers are scheduled as tasks on an ECS cluster run on spot
+instances. See `deploy/` for cloudformation scripts.
 
-for i in range(10):
-    j = 0
-    done = False
-    state = e.reset()
-    while not done:
-        action = p.act(state)
-        state, reward, done, _ = e.step(action)
-        j += 1
-    print("episode {} took {} steps".format(i, j))
-
-print("10 episodes took:", datetime.datetime.now() - t) # 0:00:44.055469
+Either pull the containers from docker-hub, or build them yourself:
 ```
+docker build -t cshenton/neuro:worker -f worker/Dockerfile .
+docker build -t cshenton/neuro:master -f master/Dockerfile .
+```
+
 
 ## Protobufs
 
-Generate python stubs:
-```
-python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grpc_python_out=.
-```
+`gRPC` is used to enable simple communication between workers and master. Server, client stubs
+are generated as follows.
 
-Generate golang stubs:
 ```
+# python
+python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grpc_python_out=.
+
+# golang
 protoc -I . proto/neuroevolution.proto --go_out=plugins=grpc:.
 ```
