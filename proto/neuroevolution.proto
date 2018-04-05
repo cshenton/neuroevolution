@@ -9,7 +9,7 @@ option go_package = "proto";
 // Neuro service exposes basic genetic algorithm for neuro-evolution.
 service Neuro {
   // Seek returns a new individual to test.
-  rpc Seek() returns (Individual) {}
+  rpc Seek(google.protobuf.Empty) returns (Individual) {}
   // Show shows the performance of an individual to the server.
   rpc Show(Evaluation) returns (google.protobuf.Empty) {}
 }
