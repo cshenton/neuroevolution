@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='proto/neuroevolution.proto',
   package='neuroevolution',
   syntax='proto3',
-  serialized_pb=_b('\n\x1aproto/neuroevolution.proto\x12\x0eneuroevolution\x1a\x1bgoogle/protobuf/empty.proto\"\x1b\n\nIndividual\x12\r\n\x05seeds\x18\x01 \x03(\x04\"K\n\nEvaluation\x12.\n\nindividual\x18\x01 \x01(\x0b\x32\x1a.neuroevolution.Individual\x12\r\n\x05score\x18\x02 \x01(\x02\x32\x83\x01\n\x05Neuro\x12<\n\x04Seek\x12\x16.google.protobuf.Empty\x1a\x1a.neuroevolution.Individual\"\x00\x12<\n\x04Show\x12\x1a.neuroevolution.Evaluation\x1a\x16.google.protobuf.Empty\"\x00\x42\x07Z\x05protob\x06proto3')
+  serialized_pb=_b('\n\x1aproto/neuroevolution.proto\x12\x0eneuroevolution\x1a\x1bgoogle/protobuf/empty.proto\"\x1b\n\nIndividual\x12\r\n\x05seeds\x18\x01 \x03(\x04\"K\n\nEvaluation\x12.\n\nindividual\x18\x01 \x01(\x0b\x32\x1a.neuroevolution.Individual\x12\r\n\x05score\x18\x02 \x01(\x01\x32\x83\x01\n\x05Neuro\x12<\n\x04Seek\x12\x16.google.protobuf.Empty\x1a\x1a.neuroevolution.Individual\"\x00\x12<\n\x04Show\x12\x1a.neuroevolution.Evaluation\x1a\x16.google.protobuf.Empty\"\x00\x42\x07Z\x05protob\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,])
 
@@ -74,7 +74,7 @@ _EVALUATION = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='score', full_name='neuroevolution.Evaluation.score', index=1,
-      number=2, type=2, cpp_type=6, label=1,
+      number=2, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,

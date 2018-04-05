@@ -11,5 +11,5 @@ python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grp
 
 Generate golang stubs:
 ```
-protoc -I . proto/atari.proto --go_out=plugins=grpc:.
+protoc -I . proto/neuroevolution.proto --go_out=plugins=grpc:.
 ```

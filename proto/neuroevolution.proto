@@ -22,5 +22,5 @@ message Individual {
 // Evaluation is an individual and the score that indivual achieved.
 message Evaluation {
   Individual individual = 1;
-  float score = 2;
+  double score = 2;
 }
