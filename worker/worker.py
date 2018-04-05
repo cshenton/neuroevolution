@@ -1,6 +1,7 @@
-"""The worker run script."""
+"""The Worker class, which manages running policy evaluations."""
 import grpc
 import gym
+import os
 
 from google.protobuf import empty_pb2
 from proto.neuroevolution_pb2 import Evaluation, Individual
@@ -8,7 +9,8 @@ from proto.neuroevolution_pb2_grpc import NeuroStub
 from worker.policy import Policy
 
 
-DEFAULT_HOST = "localhost:8080"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "Pong-v0")
+HOST = os.getenv("HOST", "localhost:8080")
 DEFAULT_STRENGTH = 0.005
 
 
@@ -22,11 +24,11 @@ class Worker:
         strength (float): The genetic mutation strength.
     """
 
-    def __init__(self, env_name, strength=DEFAULT_STRENGTH, host=DEFAULT_HOST):
+    def __init__(self, env_name=ENVIRONMENT, strength=DEFAULT_STRENGTH, host=HOST):
         """Creates a Worker instance.
 
         Args:
-            env_name (string): The valid gym environment name.
+            env (string): The valid gym environment name.
             host (string): The hostname of the master server.
             strength (float): The genetic mutation strength.
         """

@@ -1,5 +1,4 @@
-"""Policy Network class for GA learned policies in the atari domain."""
-
+"""The Policy Network class for GA learned policies in the atari domain."""
 import numpy as np
 import tensorflow as tf
 
