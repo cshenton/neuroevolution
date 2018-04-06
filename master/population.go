@@ -71,20 +71,18 @@ func (p *Population) Select() (i *proto.Individual) {
 // carried over.
 func (p *Population) Evaluate(e *proto.Evaluation) {
 	p.Lock()
-	defer p.Unlock()
-	if e.Score <= p.Scores[0] {
-		return
-	}
-	ins := sort.SearchFloat64s(p.Scores, e.Score)
-	p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
-	p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
 
 	p.GenProgress++
+	if e.Score > p.Scores[0] {
+		ins := sort.SearchFloat64s(p.Scores, e.Score)
+		p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
+		p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
+	}
 
 	if p.GenProgress >= p.GenSize {
 		// Get best individual, score
-		e := p.Elites[p.EliteSize-1]
-		s := p.Scores[p.EliteSize-1]
+		best := p.Elites[p.EliteSize-1]
+		bestScore := p.Scores[p.EliteSize-1]
 
 		// Progress a generation
 		p.PrevElites = p.Elites
@@ -95,10 +93,32 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 			p.Scores[i] = math.Inf(-1)
 		}
 		// Carry over best individual automatically
-		p.Elites[p.EliteSize-1] = e
-		p.Scores[p.EliteSize-1] = s
-		// Increment generation counter
+		p.Elites[p.EliteSize-1] = best
+		p.Scores[p.EliteSize-1] = bestScore
+		// Increment generation counter, reset progress
 		p.GenNum++
+		p.GenProgress = 0
 	}
+
+	p.Unlock()
 	return
+}
+
+// Count returns the total number of individuals evaluated.
+func (p *Population) Count() int {
+	return p.GenNum*p.GenSize + p.GenProgress
+}
+
+// Top returns the top individual
+func (p *Population) Top() (t *proto.Top) {
+	p.Lock()
+	t = &proto.Top{
+		TopIndividual: &proto.Individual{
+			Seeds: p.Elites[p.EliteSize-1],
+		},
+		TopScore: p.Scores[p.EliteSize-1],
+		NumIter:  int32(p.Count()),
+	}
+	p.Unlock()
+	return t
 }

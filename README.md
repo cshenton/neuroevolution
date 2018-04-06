@@ -41,10 +41,9 @@ docker build -t cshenton/neuro:worker -f worker/Dockerfile .
 docker build -t cshenton/neuro:master -f master/Dockerfile .
 ```
 
-## Differences
+## Results
 
-- I use a generationless GA implementation that prevents workers from being blocked.
--
+- Pong: single seed 1839779657
 
 
 ## Protobufs

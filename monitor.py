@@ -15,6 +15,6 @@ while True:
     top = client.Status(empty_pb2.Empty())
     print(
         "i: {} \t Top score: {} \t Top seed: {}".format(
-        top.num_iter, top.top_score, top.top_individual)
+        top.num_iter, top.top_score, top.top_individual.seeds)
     )
     time.sleep(15)

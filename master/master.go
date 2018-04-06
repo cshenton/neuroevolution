@@ -11,7 +11,7 @@ import (
 )
 
 const eliteSize = 10
-const genSize = 5000
+const genSize = 50
 
 // Server is the genetic algorithm server.
 type Server struct {
@@ -42,15 +42,7 @@ func (s *Server) Show(c context.Context, e *proto.Evaluation) (em *empty.Empty, 
 
 // Status shows the top individual
 func (s *Server) Status(c context.Context, em *empty.Empty) (t *proto.Top, err error) {
-	s.Population.Lock()
-	t = &proto.Top{
-		TopIndividual: &proto.Individual{
-			Seeds: s.Population.Elites[s.Population.EliteSize-1],
-		},
-		TopScore: s.Population.Scores[s.Population.EliteSize-1],
-		NumIter:  int32(s.Population.GenNum*s.Population.GenSize + s.Population.GenProgress),
-	}
-	s.Population.Unlock()
+	t = s.Top()
 	return t, nil
 }
 
