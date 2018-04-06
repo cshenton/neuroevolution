@@ -10,7 +10,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-const popSize = 25
+const eliteSize = 10
+const genSize = 5000
 
 // Server is the genetic algorithm server.
 type Server struct {
@@ -19,7 +20,7 @@ type Server struct {
 
 // New creates and returns a new server with an initialized population.
 func New() (s *Server) {
-	p := NewPopulation(popSize)
+	p := NewPopulation(eliteSize, genSize)
 	s = &Server{
 		Population: p,
 	}
@@ -44,10 +45,10 @@ func (s *Server) Status(c context.Context, em *empty.Empty) (t *proto.Top, err e
 	s.Population.Lock()
 	t = &proto.Top{
 		TopIndividual: &proto.Individual{
-			Seeds: s.Population.Elites[s.Population.NumElites-1],
+			Seeds: s.Population.Elites[s.Population.EliteSize-1],
 		},
-		TopScore: s.Population.Scores[s.Population.NumElites-1],
-		NumIter:  int32(s.Population.Total),
+		TopScore: s.Population.Scores[s.Population.EliteSize-1],
+		NumIter:  int32(s.Population.GenNum*s.Population.GenSize + s.Population.GenProgress),
 	}
 	s.Population.Unlock()
 	return t, nil

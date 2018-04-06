@@ -75,9 +75,9 @@ class Worker:
             if i >= 20000:
                 break
         self.show(seeds, score)
+        print(score, seeds)
 
     def run(self):
         """Repeatedly gets, evaluates, and reports a policy."""
         while True:
             self.run_one()
-            print()

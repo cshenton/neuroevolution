@@ -12,40 +12,51 @@ import (
 // Population is a genetic population that exposes threadsafe methods for generating
 // new individuals and updating the list of elites.
 type Population struct {
-	Elites    [][]uint32 // The current group of elites
-	Scores    []float64  // The corresponding scores of those elites
-	NumElites int        // The number of elites maintained
-	Total     int        // Number of individuals evaluated in the population
+	Elites     [][]uint32 // The current generation's elites
+	Scores     []float64  // The corresponding scores of the current elites
+	PrevElites [][]uint32 // The previous generation's elites
+
+	EliteSize   int // Size of the elites population
+	GenSize     int // Size of a full generation
+	GenNum      int // Number generation we're on (starting at 0)
+	GenProgress int // Progress through the current generation
 
 	*sync.Mutex
 }
 
 // NewPopulation creates a new, empty population of n elites with empty seeds and worst
 // case scores.
-func NewPopulation(n int) (p *Population) {
-	// Make population of worst case score 'gaia' individuals.
-	e := make([][]uint32, n)
-	s := make([]float64, n)
+func NewPopulation(eliteSize, genSize int) (p *Population) {
+	// Make population of worst case 'degenerate' individuals.
+	e := make([][]uint32, eliteSize)
+	s := make([]float64, eliteSize)
+	pe := make([][]uint32, eliteSize)
 	for i := range e {
 		e[i] = []uint32{}
 		s[i] = math.Inf(-1)
+		pe[i] = []uint32{}
 	}
 
 	p = &Population{
-		Elites:    e,
-		Scores:    s,
-		NumElites: n,
+		Elites:     e,
+		Scores:     s,
+		PrevElites: pe,
+
+		EliteSize:   eliteSize,
+		GenSize:     genSize,
+		GenNum:      0,
+		GenProgress: 0,
 
 		Mutex: &sync.Mutex{},
 	}
 	return p
 }
 
-// Select generates a new individual by randomly selecting an Elite and appending
-// a new random seed to it.
+// Select generates a new individual by randomly selecting an Elite from the previous
+// generation and appending a new random seed to it.
 func (p *Population) Select() (i *proto.Individual) {
 	p.Lock()
-	parent := p.Elites[rand.Intn(p.NumElites)]
+	parent := p.PrevElites[rand.Intn(p.EliteSize)]
 	i = &proto.Individual{
 		Seeds: append(parent, rand.Uint32()),
 	}
@@ -55,7 +66,9 @@ func (p *Population) Select() (i *proto.Individual) {
 
 // Evaluate updates the population with the provided individual, score. If the score
 // is less than the worst elite, the individual is discarded, otherwise it is inserted
-// into the population, and the worst elite is discarded.
+// into the population, and the worst elite is discarded. If this Evaluate completes
+// a generation, the elites become the previous elites, and the best invdividual gets
+// carried over.
 func (p *Population) Evaluate(e *proto.Evaluation) {
 	p.Lock()
 	defer p.Unlock()
@@ -65,6 +78,27 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 	ins := sort.SearchFloat64s(p.Scores, e.Score)
 	p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
 	p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
-	p.Total++
+
+	p.GenProgress++
+
+	if p.GenProgress >= p.GenSize {
+		// Get best individual, score
+		e := p.Elites[p.EliteSize-1]
+		s := p.Scores[p.EliteSize-1]
+
+		// Progress a generation
+		p.PrevElites = p.Elites
+		p.Elites = make([][]uint32, p.EliteSize)
+		p.Scores = make([]float64, p.EliteSize)
+		for i := range p.Elites {
+			p.Elites[i] = []uint32{}
+			p.Scores[i] = math.Inf(-1)
+		}
+		// Carry over best individual automatically
+		p.Elites[p.EliteSize-1] = e
+		p.Scores[p.EliteSize-1] = s
+		// Increment generation counter
+		p.GenNum++
+	}
 	return
 }
