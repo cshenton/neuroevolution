@@ -1,6 +1,7 @@
 package master
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -75,14 +76,20 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 	p.GenProgress++
 	if e.Score > p.Scores[0] {
 		ins := sort.SearchFloat64s(p.Scores, e.Score)
-		p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
-		p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
+
+		for i := 0; i < ins-1; i++ {
+			p.Scores[i] = p.Scores[i+1]
+			p.Elites[i] = p.Elites[i+1]
+		}
+		p.Scores[ins-1] = e.Score
+		p.Elites[ins-1] = e.Individual.Seeds
 	}
 
 	if p.GenProgress >= p.GenSize {
 		// Get best individual, score
 		best := p.Elites[p.EliteSize-1]
 		bestScore := p.Scores[p.EliteSize-1]
+		fmt.Printf("Top in gen: %v, with score %v\n", best, bestScore)
 
 		// Progress a generation
 		p.PrevElites = p.Elites
