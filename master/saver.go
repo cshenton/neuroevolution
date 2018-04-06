@@ -43,14 +43,11 @@ func (s *Saver) Save(p *Population) {
 
 	// wtf is this API aws!?
 	_, err := s3.New(s.sess).PutObject(&s3.PutObjectInput{
-		Bucket:               aws.String(s.bucket),
-		Key:                  aws.String(key),
-		ACL:                  aws.String("private"),
-		Body:                 bytes.NewReader(b),
-		ContentLength:        aws.Int64(int64(len(b))),
-		ContentType:          aws.String(http.DetectContentType(b)),
-		ContentDisposition:   aws.String("attachment"),
-		ServerSideEncryption: aws.String("AES256"),
+		Bucket:        aws.String(s.bucket),
+		Key:           aws.String(key),
+		Body:          bytes.NewReader(b),
+		ContentLength: aws.Int64(int64(len(b))),
+		ContentType:   aws.String(http.DetectContentType(b)),
 	})
 
 	if err != nil {

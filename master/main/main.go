@@ -14,6 +14,8 @@ var (
 	region = os.Getenv("REGION")
 )
 
+// Runs the server and the saver. Assumes that the ec2 instance / ecs task
+// has host level permissions for s3 access.
 func main() {
 	s := master.New()
 	sv, err := master.NewSaver(name, bucket, region)
