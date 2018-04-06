@@ -2,9 +2,12 @@ package master
 
 import (
 	"context"
+	"log"
+	"net"
 
 	"github.com/cshenton/neuroevolution/proto"
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
 )
 
 const popSize = 25
@@ -33,4 +36,18 @@ func (s *Server) Seek(c context.Context, em *empty.Empty) (i *proto.Individual, 
 func (s *Server) Show(c context.Context, e *proto.Evaluation) (em *empty.Empty, err error) {
 	s.Evaluate(e)
 	return
+}
+
+// Run constructs and runs the NeuroServer grpc server.
+func (s *Server) Run(port string) {
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	srv := grpc.NewServer()
+	proto.RegisterNeuroServer(srv, s)
+	if err := srv.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }

@@ -5,7 +5,6 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- pre-seeding weight init (just need to rethink how it's sequenced)
 - master training curve
 - master s3 status reports
 - build, host docker images
@@ -62,4 +61,39 @@ python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grp
 
 # golang
 protoc -I . proto/neuroevolution.proto --go_out=plugins=grpc:.
+```
+
+
+```python
+import datetime
+import gym
+import numpy as np
+
+from worker.policy import Policy
+
+# How long does it take to initialize on a 10 seed individual?
+seeds = np.random.randint(1e8, size=10)
+p = Policy(6)
+t = datetime.datetime.now()
+p.set_weights(seeds, 0.005)
+print("initialization time:", datetime.datetime.now() - t) # 0:00:02.267878
+
+e = gym.make('Pong-v0')
+
+# How long does it take to do 20sk frames (max evaluation length)
+t = datetime.datetime.now()
+
+for i in range(10):
+    seeds = np.random.randint(1e8, size=10)
+    p.set_weights(seeds, 0.005)
+    j = 0
+    done = False
+    state = e.reset()
+    while not done:
+        action = p.act(state)
+        state, reward, done, _ = e.step(action)
+        j += 1
+    print("episode {} took {} steps".format(i, j))
+
+print("10 episodes took:", datetime.datetime.now() - t) # 0:00:44.055469
 ```

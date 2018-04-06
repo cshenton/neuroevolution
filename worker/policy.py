@@ -15,7 +15,7 @@ class Policy:
 
     Attributes:
         n_actions (int): Number of actions in the current atari environment.
-        weights (tf.Variable): The global network weights variable.
+        weights (list of tf.Variable): The network weight variables.
         input (tf.Placeholder): The state input placeholder.
         logits (tf.Tensor): The output policy logits.
         action (tf.Tensor): A multinomial draw over the policy logits.
@@ -33,13 +33,12 @@ class Policy:
         # Initializer with fixed seed
         init = tf.contrib.layers.variance_scaling_initializer(seed=42)
 
-        # Global weights Variable
-        w = tf.Variable(tf.ones([4434944+256*n_actions]), trainable=False)
-        conv1 = tf.reshape(w[0:3072], [8, 8, 3, 16])
-        conv2 = tf.reshape(w[3072:11264], [4, 4, 16, 32])
-        dens1 = tf.reshape(w[11264:4434944], [17280, 256])
-        dens2 = tf.reshape(w[4434944:4434944+256*n_actions], [256, n_actions])
-        self.weights = w
+        # Weights Variables
+        conv1 = tf.Variable(init([8, 8, 3, 16]), trainable=False)
+        conv2 = tf.Variable(init([4, 4, 16, 32]), trainable=False)
+        dens1 = tf.Variable(init([17280, 256]), trainable=False)
+        dens2 = tf.Variable(init([256, n_actions]), trainable=False)
+        self.weights = [conv1, conv2, dens1, dens2]
 
         # Feed forward network defined with functional ops
         self.input = tf.placeholder(tf.float32, [None] + ATARI_DIMS)
@@ -56,7 +55,6 @@ class Policy:
         self.action = tf.multinomial(self.logits, 1)
 
         self.sess = tf.Session()
-        self.sess.run(tf.global_variables_initializer())
 
     def act(self, state):
         """Computes a forward pass through the policy graph, returns an action.
@@ -75,20 +73,23 @@ class Policy:
     def set_weights(self, seeds, strength):
         """Sets the graph weights given a sequence of random seeds to do so.
 
-        Iterates through the seed list, generates a normal draw with the specified
-        mutation strength, and adds it to the weight tensor. Then sets the weight
-        tensor in the tf graph.
+        Reruns the initializer, reads the variable value, adds noise to it in
+        numpy according to the provided seeds, strength, then directly loads
+        the new value into the Variable.
+
+        It is important that this function does not add ops to the graph.
 
         Args:
             seeds (list of ints): The list of integer random seeds to use for
                 random perturbation of the network weights.
             strength (float): The mutation strength or random scale.
         """
-        size = [4434944 + 256*self.n_actions]
-        w = np.zeros(size)
-        # TODO: proper pre-seeded initialization.
-        for s in seeds:
-            r = np.random.RandomState(s)
-            w += r.normal(0, strength, size=size) # 50ns per float, slow :(
+        self.sess.run(tf.global_variables_initializer())
+        rands = [np.random.RandomState(s) for s in seeds]
 
-        self.sess.run(self.weights.assign(w))
+        for w in self.weights:
+            new_w = self.sess.run(w)
+            size = new_w.shape
+            for r in rands:
+                new_w += r.normal(0, strength, size=size)
+            w.load(new_w, self.sess)
