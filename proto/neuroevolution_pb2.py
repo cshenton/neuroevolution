@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='proto/neuroevolution.proto',
   package='neuroevolution',
   syntax='proto3',
-  serialized_pb=_b('\n\x1aproto/neuroevolution.proto\x12\x0eneuroevolution\x1a\x1bgoogle/protobuf/empty.proto\"\x1b\n\nIndividual\x12\r\n\x05seeds\x18\x01 \x03(\x04\"K\n\nEvaluation\x12.\n\nindividual\x18\x01 \x01(\x0b\x32\x1a.neuroevolution.Individual\x12\r\n\x05score\x18\x02 \x01(\x01\x32\x83\x01\n\x05Neuro\x12<\n\x04Seek\x12\x16.google.protobuf.Empty\x1a\x1a.neuroevolution.Individual\"\x00\x12<\n\x04Show\x12\x1a.neuroevolution.Evaluation\x1a\x16.google.protobuf.Empty\"\x00\x42\x07Z\x05protob\x06proto3')
+  serialized_pb=_b('\n\x1aproto/neuroevolution.proto\x12\x0eneuroevolution\x1a\x1bgoogle/protobuf/empty.proto\"\x1b\n\nIndividual\x12\r\n\x05seeds\x18\x01 \x03(\r\"K\n\nEvaluation\x12.\n\nindividual\x18\x01 \x01(\x0b\x32\x1a.neuroevolution.Individual\x12\r\n\x05score\x18\x02 \x01(\x01\"^\n\x03Top\x12\x32\n\x0etop_individual\x18\x01 \x01(\x0b\x32\x1a.neuroevolution.Individual\x12\x11\n\ttop_score\x18\x02 \x01(\x01\x12\x10\n\x08num_iter\x18\x03 \x01(\x05\x32\xbc\x01\n\x05Neuro\x12<\n\x04Seek\x12\x16.google.protobuf.Empty\x1a\x1a.neuroevolution.Individual\"\x00\x12<\n\x04Show\x12\x1a.neuroevolution.Evaluation\x1a\x16.google.protobuf.Empty\"\x00\x12\x37\n\x06Status\x12\x16.google.protobuf.Empty\x1a\x13.neuroevolution.Top\"\x00\x42\x07Z\x05protob\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,])
 
@@ -36,7 +36,7 @@ _INDIVIDUAL = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='seeds', full_name='neuroevolution.Individual.seeds', index=0,
-      number=1, type=4, cpp_type=4, label=3,
+      number=1, type=13, cpp_type=3, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -95,9 +95,56 @@ _EVALUATION = _descriptor.Descriptor(
   serialized_end=179,
 )
 
+
+_TOP = _descriptor.Descriptor(
+  name='Top',
+  full_name='neuroevolution.Top',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='top_individual', full_name='neuroevolution.Top.top_individual', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='top_score', full_name='neuroevolution.Top.top_score', index=1,
+      number=2, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='num_iter', full_name='neuroevolution.Top.num_iter', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=181,
+  serialized_end=275,
+)
+
 _EVALUATION.fields_by_name['individual'].message_type = _INDIVIDUAL
+_TOP.fields_by_name['top_individual'].message_type = _INDIVIDUAL
 DESCRIPTOR.message_types_by_name['Individual'] = _INDIVIDUAL
 DESCRIPTOR.message_types_by_name['Evaluation'] = _EVALUATION
+DESCRIPTOR.message_types_by_name['Top'] = _TOP
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Individual = _reflection.GeneratedProtocolMessageType('Individual', (_message.Message,), dict(
@@ -114,6 +161,13 @@ Evaluation = _reflection.GeneratedProtocolMessageType('Evaluation', (_message.Me
   ))
 _sym_db.RegisterMessage(Evaluation)
 
+Top = _reflection.GeneratedProtocolMessageType('Top', (_message.Message,), dict(
+  DESCRIPTOR = _TOP,
+  __module__ = 'proto.neuroevolution_pb2'
+  # @@protoc_insertion_point(class_scope:neuroevolution.Top)
+  ))
+_sym_db.RegisterMessage(Top)
+
 
 DESCRIPTOR.has_options = True
 DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('Z\005proto'))
@@ -124,8 +178,8 @@ _NEURO = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=182,
-  serialized_end=313,
+  serialized_start=278,
+  serialized_end=466,
   methods=[
   _descriptor.MethodDescriptor(
     name='Seek',
@@ -143,6 +197,15 @@ _NEURO = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_EVALUATION,
     output_type=google_dot_protobuf_dot_empty__pb2._EMPTY,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Status',
+    full_name='neuroevolution.Neuro.Status',
+    index=2,
+    containing_service=None,
+    input_type=google_dot_protobuf_dot_empty__pb2._EMPTY,
+    output_type=_TOP,
     options=None,
   ),
 ])

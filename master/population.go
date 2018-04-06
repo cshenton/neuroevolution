@@ -12,7 +12,7 @@ import (
 // Population is a genetic population that exposes threadsafe methods for generating
 // new individuals and updating the list of elites.
 type Population struct {
-	Elites    [][]uint64 // The current group of elites
+	Elites    [][]uint32 // The current group of elites
 	Scores    []float64  // The corresponding scores of those elites
 	NumElites int        // The number of elites maintained
 	Total     int        // Number of individuals evaluated in the population
@@ -24,10 +24,10 @@ type Population struct {
 // case scores.
 func NewPopulation(n int) (p *Population) {
 	// Make population of worst case score 'gaia' individuals.
-	e := make([][]uint64, n)
+	e := make([][]uint32, n)
 	s := make([]float64, n)
 	for i := range e {
-		e[i] = []uint64{}
+		e[i] = []uint32{}
 		s[i] = math.Inf(-1)
 	}
 
@@ -47,7 +47,7 @@ func (p *Population) Select() (i *proto.Individual) {
 	p.Lock()
 	parent := p.Elites[rand.Intn(p.NumElites)]
 	i = &proto.Individual{
-		Seeds: append(parent, rand.Uint64()),
+		Seeds: append(parent, rand.Uint32()),
 	}
 	p.Unlock()
 	return i

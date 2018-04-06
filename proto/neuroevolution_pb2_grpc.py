@@ -25,6 +25,11 @@ class NeuroStub(object):
         request_serializer=proto_dot_neuroevolution__pb2.Evaluation.SerializeToString,
         response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
         )
+    self.Status = channel.unary_unary(
+        '/neuroevolution.Neuro/Status',
+        request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        response_deserializer=proto_dot_neuroevolution__pb2.Top.FromString,
+        )
 
 
 class NeuroServicer(object):
@@ -45,6 +50,13 @@ class NeuroServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def Status(self, request, context):
+    """Status shows the number of evaluations run, as well as the top individual
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_NeuroServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -57,6 +69,11 @@ def add_NeuroServicer_to_server(servicer, server):
           servicer.Show,
           request_deserializer=proto_dot_neuroevolution__pb2.Evaluation.FromString,
           response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+      ),
+      'Status': grpc.unary_unary_rpc_method_handler(
+          servicer.Status,
+          request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+          response_serializer=proto_dot_neuroevolution__pb2.Top.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

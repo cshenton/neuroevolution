@@ -5,8 +5,6 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- figure out a nicer way to do reporting (preferably a platform agnostic one)
-- build, host docker images
 - simple local reporting script
 - cloudformation scripts for first run
     - num workers

@@ -10,7 +10,7 @@ from worker.policy import Policy
 
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "Pong-v0")
-HOST = os.getenv("HOST", "localhost:8080")
+HOST = os.getenv("HOST", "127.0.0.1:8080")
 DEFAULT_STRENGTH = 0.005
 
 
@@ -35,6 +35,7 @@ class Worker:
         self.client = NeuroStub(grpc.insecure_channel(host))
         self.env = gym.make(env_name)
         self.policy = Policy(self.env.action_space.n)
+        self.strength = strength
 
     def seek(self):
         """Gets a new set of seeds to try from the master server.

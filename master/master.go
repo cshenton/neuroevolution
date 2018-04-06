@@ -2,6 +2,7 @@ package master
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/cshenton/neuroevolution/proto"
@@ -37,6 +38,20 @@ func (s *Server) Show(c context.Context, e *proto.Evaluation) (em *empty.Empty, 
 	return
 }
 
+// Status shows the top individual
+func (s *Server) Status(c context.Context, em *empty.Empty) (t *proto.Top, err error) {
+	s.Population.Lock()
+	t = &proto.Top{
+		TopIndividual: &proto.Individual{
+			Seeds: s.Population.Elites[s.Population.NumElites-1],
+		},
+		TopScore: s.Population.Scores[s.Population.NumElites-1],
+		NumIter:  int32(s.Population.Total),
+	}
+	s.Population.Unlock()
+	return t, nil
+}
+
 // Run constructs and runs the NeuroServer grpc server.
 func (s *Server) Run(port string) (err error) {
 	lis, err := net.Listen("tcp", port)
@@ -46,6 +61,7 @@ func (s *Server) Run(port string) (err error) {
 
 	srv := grpc.NewServer()
 	proto.RegisterNeuroServer(srv, s)
+	fmt.Println("running")
 	err = srv.Serve(lis) // this will block
 	return err
 }
