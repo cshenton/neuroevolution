@@ -66,10 +66,10 @@ class Worker:
         i = 0
         score = 0
         done = False
-        state = e.reset()
+        state = self.env.reset()
         while not done:
             action = self.policy.act(state)
-            state, reward, done, _ = e.step(action)
+            state, reward, done, _ = self.env.step(action)
             score += reward
             if i >= 20000:
                 break
