@@ -5,7 +5,6 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- master training curve
 - master s3 status reports
 - build, host docker images
 - simple local reporting script

@@ -1,7 +1,6 @@
 package master
 
 import (
-	"encoding/json"
 	"math"
 	"math/rand"
 	"sort"
@@ -13,9 +12,10 @@ import (
 // Population is a genetic population that exposes threadsafe methods for generating
 // new individuals and updating the list of elites.
 type Population struct {
-	Elites    [][]uint64
-	Scores    []float64
-	NumElites int
+	Elites    [][]uint64 // The current group of elites
+	Scores    []float64  // The corresponding scores of those elites
+	NumElites int        // The number of elites maintained
+	Total     int        // Number of individuals evaluated in the population
 
 	*sync.Mutex
 }
@@ -65,13 +65,6 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 	ins := sort.SearchFloat64s(p.Scores, e.Score)
 	p.Scores = append(append(p.Scores[1:ins], e.Score), p.Scores[ins:len(p.Scores)]...)
 	p.Elites = append(append(p.Elites[1:ins], e.Individual.Seeds), p.Elites[ins:len(p.Elites)]...)
+	p.Total++
 	return
-}
-
-// Save returns a json []byte with the current population state.
-func (p *Population) Save() (b []byte) {
-	p.Lock()
-	b, _ = json.Marshal(p)
-	p.Unlock()
-	return b
 }

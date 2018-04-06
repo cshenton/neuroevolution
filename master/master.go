@@ -2,7 +2,6 @@ package master
 
 import (
 	"context"
-	"log"
 	"net"
 
 	"github.com/cshenton/neuroevolution/proto"
@@ -17,7 +16,7 @@ type Server struct {
 	*Population
 }
 
-// New creates and returns a new server with an empty population.
+// New creates and returns a new server with an initialized population.
 func New() (s *Server) {
 	p := NewPopulation(popSize)
 	s = &Server{
@@ -39,15 +38,14 @@ func (s *Server) Show(c context.Context, e *proto.Evaluation) (em *empty.Empty, 
 }
 
 // Run constructs and runs the NeuroServer grpc server.
-func (s *Server) Run(port string) {
+func (s *Server) Run(port string) (err error) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return err
 	}
 
 	srv := grpc.NewServer()
 	proto.RegisterNeuroServer(srv, s)
-	if err := srv.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	err = srv.Serve(lis) // this will block
+	return err
 }

@@ -11,7 +11,14 @@ RUN cd /go/src/github.com/cshenton/neuroevolution && \
     go get ./... && \
     go build -a -v -o ./runmaster ./master/main/main.go
 
+
 FROM alpine
 WORKDIR /
 COPY --from=build-env /go/src/github.com/cshenton/neuroevolution/runmaster /master
+
+ENV BUCKET experiment-bucket
+ENV NAME atari-experiment
+ENV PORT :8080
+ENV REGION ap-southeast-2
+
 ENTRYPOINT ./master
