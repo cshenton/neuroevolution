@@ -55,9 +55,9 @@ class Worker:
         """
         self.client.Show(Evaluation(
             individual=Individual(
-                seeds=ind.seeds,
+                seeds=seeds,
             ),
-            score=r,
+            score=score,
         ))
 
     def run_one(self):
@@ -80,3 +80,4 @@ class Worker:
         """Repeatedly gets, evaluates, and reports a policy."""
         while True:
             self.run_one()
+            print()

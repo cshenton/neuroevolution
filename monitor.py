@@ -4,6 +4,7 @@ import time
 
 from google.protobuf import empty_pb2
 from proto.neuroevolution_pb2_grpc import NeuroStub
+from proto.neuroevolution_pb2 import Top
 
 
 HOST = "127.0.0.1:8080"

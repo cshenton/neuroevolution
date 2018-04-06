@@ -35,7 +35,8 @@ func (s *Server) Seek(c context.Context, em *empty.Empty) (i *proto.Individual, 
 // Show shows the performance of an individual to the server.
 func (s *Server) Show(c context.Context, e *proto.Evaluation) (em *empty.Empty, err error) {
 	s.Evaluate(e)
-	return
+	em = &empty.Empty{}
+	return em, nil
 }
 
 // Status shows the top individual
