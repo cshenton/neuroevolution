@@ -9,7 +9,7 @@ from proto.neuroevolution_pb2_grpc import NeuroStub
 from worker.policy import Policy
 
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "Pong-v4")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "Venture-v4")
 HOST = os.getenv("HOST", "127.0.0.1:8080")
 DEFAULT_STRENGTH = 0.005
 

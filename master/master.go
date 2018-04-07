@@ -11,7 +11,7 @@ import (
 )
 
 const eliteSize = 10
-const genSize = 50
+const genSize = 500
 
 // Server is the genetic algorithm server.
 type Server struct {
