@@ -40,6 +40,16 @@ Resources:
   iamSpotFleetRole:
     Type: AWS::IAM::Role
     Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
       RoleName: iamSpotFleetRole
@@ -48,9 +58,27 @@ Resources:
   iamEcsInstanceRole:
     Type: AWS::IAM::Role
     Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
       RoleName: iamEcsInstanceRole
+
+  iamEcsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: iamEcsInstanceProfile
+      Roles:
+        - !Ref iamEcsInstanceRole
+
 
   ##############
   ### MASTER ###
@@ -161,7 +189,7 @@ Resources:
         LaunchSpecifications:
           -
             IamInstanceProfile:
-              Arn: !GetAtt iamEcsInstanceRole.Arn
+              Arn: !GetAtt iamEcsInstanceProfile.Arn
             ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
             InstanceType: c4.large
             Placement:
