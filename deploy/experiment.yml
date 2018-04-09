@@ -13,8 +13,8 @@ Parameters:
     Type: AWS::EC2::VPC::Id
     Description: The VPC to run the experiment in.
 
-  targetCapacity:
-    Type: Integer
+  targetWorkers:
+    Type: Number
     Default: 720
     Description: The number of worker vCPUs to run. Default is 720 (same as Uber paper).
 
@@ -36,6 +36,22 @@ Mappings:
 
 Resources:
 
+  # IAM role for managing spot fleet
+  iamSpotFleetRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole
+      RoleName: iamSpotFleetRole
+
+  # IAM role for regisering ECS instances
+  iamEcsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+      RoleName: iamEcsInstanceRole
+
   ##############
   ### MASTER ###
   ##############
@@ -44,7 +60,7 @@ Resources:
   masterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: masterSecurity
+      GroupName: masterSecurityGroup
       GroupDescription: Security group for the master ECS cluster.
       SecurityGroupIngress:
         -
@@ -68,13 +84,13 @@ Resources:
 
   # EC2 on-demand instance that registers itself to the master cluster.
   masterInstance:
-    Type: "AWS::EC2::Instance"
+    Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: !Ref targetAZ
-      IamInstanceProfile: ecsInstanceRole
+      IamInstanceProfile: !Ref iamEcsInstanceRole
       ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
       InstanceType: c4.large
-      SecurityGroups:
+      SecurityGroupIds:
         - !Ref masterSecurityGroup
       UserData:
         Fn::Base64: !Sub |
@@ -108,7 +124,6 @@ Resources:
       TaskDefinition: !Ref masterTask
       Cluster: !Ref masterCluster
       DesiredCount: 1
-      Role: ecsServiceRole
 
 
   ###############
@@ -119,7 +134,7 @@ Resources:
   workerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: workerSecurity
+      GroupName: workerSecurityGroup
       GroupDescription: Security group for the worker ECS cluster.
       VpcId: !Ref targetVPC
 
@@ -139,19 +154,22 @@ Resources:
   # Spot Fleet request, launches c4.larges into the ECS cluster.
   workerSpotFleet:
     Type: AWS::EC2::SpotFleet
+    DependsOn: masterService
     Properties:
       SpotFleetRequestConfigData:
-        IamFleetRole: aws-ec2-spot-fleet-tagging-role
+        IamFleetRole: !GetAtt iamSpotFleetRole.Arn
         LaunchSpecifications:
           -
-            IamInstanceProfile: ecsInstanceRole
+            IamInstanceProfile:
+              Arn: !GetAtt iamEcsInstanceRole.Arn
             ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
             InstanceType: c4.large
             Placement:
               AvailabilityZone: !Ref targetAZ
               GroupName: workerPlacementGroup
             SecurityGroups:
-              - !Ref workerSecurityGroup
+              -
+                GroupId: !Ref workerSecurityGroup
             UserData:
               Fn::Base64: !Sub |
                 #!/bin/bash
@@ -192,8 +210,8 @@ Resources:
   # ECS Service, schedules as many workers as the cluster can hold.
   workerService:
     Type: AWS::ECS::Service
+    DependsOn: masterService
     Properties:
       TaskDefinition: !Ref workerTask
       Cluster: !Ref workerCluster
-      DesiredCount: !Ref targetCapacity
-      Role: ecsServiceRole
+      DesiredCount: !Ref targetWorkers
