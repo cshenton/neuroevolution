@@ -5,7 +5,6 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- simple local reporting script
 - cloudformation scripts for first run
     - num workers
     - environment
@@ -31,19 +30,35 @@ and requires workers to synchronise.
 
 ## Deployment
 
-Both master and worker are packaged as docker containers. A single copy of the master is deployed
-on an dedicated EC2 server. The workers are scheduled as tasks on an ECS cluster run on spot
-instances. See `deploy/` for cloudformation scripts.
-
-Either pull the containers from docker-hub, or build them yourself:
+Both master and worker are packaged as docker containers. Either pull the containers from docker-hub,
+or build them yourself:
 ```
 docker build -t cshenton/neuro:worker -f worker/Dockerfile .
 docker build -t cshenton/neuro:master -f master/Dockerfile .
 ```
 
-## Results
+Cloudformation scripts deploy the experiment. The following resoures are required:
+- VPC
 
-- Pong: single seed 1839779657
+Then the cloudformation scripts create:
+- Master
+    - Security group (Open on 80)
+    - Single machine auto-scaling group (c4.large)
+    - ECS Task
+    - Single container ECS Service
+- Workers
+    - Security group (no ingress)
+    - Spot instance auto-scaling group of desired size (c4.large)
+    - ECS Task (1 vCPU per container)
+    - ECS Service with 4 * nMachines tasks
+
+The spot price I'm working against is $0.0307 for the c4.large, which at a budget of $0.035 is at most
+$0.0175 per vCPU per hour. Therefore, running a 1 master, 499 worker fleet for an hour will mean 998
+separate worker processes, and will cost:
+```python
+(1 + 499) * 0.035 = $17.50
+```
+
 
 
 ## Protobufs
