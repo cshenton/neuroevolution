@@ -102,6 +102,7 @@ Resources:
           IpProtocol: "tcp"
           FromPort: "8080"
           ToPort: "8080"
+          CidrIp: "0.0.0.0/0"
       VpcId: !Ref targetVPC
 
   # Log group for master logs.
@@ -144,7 +145,8 @@ Resources:
           Cpu: 2048
           MemoryReservation: 3000
           PortMappings:
-            - ContainerPort: 8080
+            -
+              ContainerPort: 8080
               HostPort: 8080
           LogConfiguration:
             LogDriver: awslogs
@@ -165,85 +167,85 @@ Resources:
   ### WORKERS ###
   ###############
 
-  # Security group, no ingress.
-  workerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: workerSecurityGroup
-      GroupDescription: Security group for the worker ECS cluster.
-      VpcId: !Ref targetVPC
+  # # Security group, no ingress.
+  # workerSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupName: workerSecurityGroup
+  #     GroupDescription: Security group for the worker ECS cluster.
+  #     VpcId: !Ref targetVPC
 
-  # Log group for worker logs.
-  workerLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: neuro-worker-logs
-      RetentionInDays: 7
+  # # Log group for worker logs.
+  # workerLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: neuro-worker-logs
+  #     RetentionInDays: 7
 
-  # ECS Cluster that workers are scheduled onto.
-  workerCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: workerCluster
+  # # ECS Cluster that workers are scheduled onto.
+  # workerCluster:
+  #   Type: AWS::ECS::Cluster
+  #   Properties:
+  #     ClusterName: workerCluster
 
-  # Spot Fleet request, launches c4.larges into the ECS cluster.
-  workerSpotFleet:
-    Type: AWS::EC2::SpotFleet
-    DependsOn: masterService
-    Properties:
-      SpotFleetRequestConfigData:
-        IamFleetRole: !GetAtt iamSpotFleetRole.Arn
-        LaunchSpecifications:
-          -
-            IamInstanceProfile:
-              Arn: !GetAtt iamEcsInstanceProfile.Arn
-            ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
-            InstanceType: c4.large
-            SecurityGroups:
-              -
-                GroupId: !Ref workerSecurityGroup
-            UserData:
-              Fn::Base64: !Sub |
-                #!/bin/bash
-                echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
-            WeightedCapacity: 2
-        SpotPrice: '0.0175' # 0.035 / 2 since spot price is weighted by capacity (which is vCPUs here)
-        TargetCapacity: !Ref targetWorkers
-        TerminateInstancesWithExpiration: true
-        Type: maintain
+  # # Spot Fleet request, launches c4.larges into the ECS cluster.
+  # workerSpotFleet:
+  #   Type: AWS::EC2::SpotFleet
+  #   DependsOn: masterService
+  #   Properties:
+  #     SpotFleetRequestConfigData:
+  #       IamFleetRole: !GetAtt iamSpotFleetRole.Arn
+  #       LaunchSpecifications:
+  #         -
+  #           IamInstanceProfile:
+  #             Arn: !GetAtt iamEcsInstanceProfile.Arn
+  #           ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
+  #           InstanceType: c4.large
+  #           SecurityGroups:
+  #             -
+  #               GroupId: !Ref workerSecurityGroup
+  #           UserData:
+  #             Fn::Base64: !Sub |
+  #               #!/bin/bash
+  #               echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
+  #           WeightedCapacity: 2
+  #       SpotPrice: '0.0175' # 0.035 / 2 since spot price is weighted by capacity (which is vCPUs here)
+  #       TargetCapacity: !Ref targetWorkers
+  #       TerminateInstancesWithExpiration: true
+  #       Type: maintain
 
-  # ECS Task, defines the worker job to run.
-  workerTask:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: worker
-      ContainerDefinitions:
-        -
-          Name: worker
-          Image: cshenton/neuro:worker
-          Cpu: 1024
-          MemoryReservation: 1500
-          Environment:
-            -
-              Name: ENVIRONMENT
-              Value: !Ref targetEnvironment
-            -
-              Name: HOST_ADDRESS
-              Value: !GetAtt masterInstance.PublicDnsName
-            -
-              Name: HOST_PORT
-              Value: 8080
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref workerLogGroup
-              awslogs-region: !Ref AWS::Region
+  # # ECS Task, defines the worker job to run.
+  # workerTask:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: worker
+  #     ContainerDefinitions:
+  #       -
+  #         Name: worker
+  #         Image: cshenton/neuro:worker
+  #         Cpu: 1024
+  #         MemoryReservation: 1500
+  #         Environment:
+  #           -
+  #             Name: ENVIRONMENT
+  #             Value: !Ref targetEnvironment
+  #           -
+  #             Name: HOST_ADDRESS
+  #             Value: !GetAtt masterInstance.PublicDnsName
+  #           -
+  #             Name: HOST_PORT
+  #             Value: 8080
+  #         LogConfiguration:
+  #           LogDriver: awslogs
+  #           Options:
+  #             awslogs-group: !Ref workerLogGroup
+  #             awslogs-region: !Ref AWS::Region
 
-  # ECS Service, schedules as many workers as the cluster can hold.
-  workerService:
-    Type: AWS::ECS::Service
-    DependsOn: masterService
-    Properties:
-      TaskDefinition: !Ref workerTask
-      Cluster: !Ref workerCluster
-      DesiredCount: !Ref targetWorkers
+  # # ECS Service, schedules as many workers as the cluster can hold.
+  # workerService:
+  #   Type: AWS::ECS::Service
+  #   DependsOn: masterService
+  #   Properties:
+  #     TaskDefinition: !Ref workerTask
+  #     Cluster: !Ref workerCluster
+  #     DesiredCount: !Ref targetWorkers
