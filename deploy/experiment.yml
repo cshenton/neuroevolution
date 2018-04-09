@@ -47,6 +47,13 @@ Resources:
             Effect: "Allow"
             Principal:
               Service:
+                - "spotfleet.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
                 - "ec2.amazonaws.com"
             Action:
               - "sts:AssumeRole"
@@ -115,7 +122,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: !Ref targetAZ
-      IamInstanceProfile: !Ref iamEcsInstanceRole
+      IamInstanceProfile: !Ref iamEcsInstanceProfile
       ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
       InstanceType: c4.large
       SecurityGroupIds:
@@ -192,9 +199,6 @@ Resources:
               Arn: !GetAtt iamEcsInstanceProfile.Arn
             ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
             InstanceType: c4.large
-            Placement:
-              AvailabilityZone: !Ref targetAZ
-              GroupName: workerPlacementGroup
             SecurityGroups:
               -
                 GroupId: !Ref workerSecurityGroup
