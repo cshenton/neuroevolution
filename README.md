@@ -33,12 +33,18 @@ and requires workers to synchronise.
 Both master and worker are packaged as docker containers. Either pull the containers from docker-hub,
 or build them yourself:
 ```
+# Download
+docker pull cshenton/neuro:worker
+docker pull cshenton/neuro:master
+
+# Build
 docker build -t cshenton/neuro:worker -f worker/Dockerfile .
 docker build -t cshenton/neuro:master -f master/Dockerfile .
 ```
 
-Cloudformation scripts deploy the experiment. The following resoures are required:
-- VPC
+Cloudformation scripts deploy the experiment. The following information is required:
+- Availability Zone
+- Target VPC
 
 Then the cloudformation scripts create:
 - Master
@@ -55,9 +61,10 @@ Then the cloudformation scripts create:
 The spot price I'm working against is $0.0307 for the c4.large, which at a budget of $0.035 is at most
 $0.0175 per vCPU per hour. Therefore, running a 1 master, 499 worker fleet for an hour will mean 998
 separate worker processes, and will cost:
-```python
+```
 (1 + 499) * 0.035 = $17.50
 ```
+Which is pretty affordable, considering the
 
 
 
