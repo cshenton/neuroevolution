@@ -11,6 +11,7 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
     - choice of vpc, etc.
 - first run
 - better ECS image map in cloudformation
+    - also note that you need to open spot fleet in console to create role
 - full environment list in cloudformation
 
 

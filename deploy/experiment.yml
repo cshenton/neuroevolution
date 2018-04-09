@@ -1,4 +1,6 @@
-Description: Drone task definition, ECS service, and load balancer.
+Description: >
+  Launches a neuroevolution master and a spot fleet of workers
+  to solve the specified atari environment.
 
 
 Parameters:
@@ -68,11 +70,7 @@ Resources:
   masterInstance:
     Type: "AWS::EC2::Instance"
     Properties:
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvdcz
-          Ebs:
-            VolumeSize: 22
-            VolumeType: gp2
+      AvailabilityZone: !Ref targetAZ
       IamInstanceProfile: ecsInstanceRole
       ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
       InstanceType: c4.large
@@ -104,7 +102,7 @@ Resources:
               awslogs-region: !Ref AWS::Region
 
   # ECS Service, schedules the single master.
-  workerService:
+  masterService:
     Type: AWS::ECS::Service
     Properties:
       TaskDefinition: !Ref masterTask
@@ -141,7 +139,6 @@ Resources:
   # Spot Fleet request, launches c4.larges into the ECS cluster.
   workerSpotFleet:
     Type: AWS::EC2::SpotFleet
-    DependsOn: workerCluster
     Properties:
       SpotFleetRequestConfigData:
         IamFleetRole: aws-ec2-spot-fleet-tagging-role
@@ -160,7 +157,7 @@ Resources:
                 #!/bin/bash
                 echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
             WeightedCapacity: 2
-        SpotPrice: 0.035
+        SpotPrice: '0.0175' # 0.035 / 2 since spot price is weighted by capacity (which is vCPUs here)
         TargetCapacity: !Ref targetWorkers
         TerminateInstancesWithExpiration: true
         Type: maintain
