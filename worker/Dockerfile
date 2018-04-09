@@ -20,4 +20,6 @@ ADD worker/ worker/
 ADD proto/neuroevolution_pb2.py proto/neuroevolution_pb2.py
 ADD proto/neuroevolution_pb2_grpc.py proto/neuroevolution_pb2_grpc.py
 
-CMD python -c "from worker import Worker;  Worker().run()"
+ENV PYTHONUNBUFFERED=0
+
+CMD ["python","-m","worker.main"]

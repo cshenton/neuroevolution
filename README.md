@@ -118,3 +118,5 @@ for i in range(10):
 
 print("10 episodes took:", datetime.datetime.now() - t) # 0:00:44.055469
 ```
+
+docker run -e ENVIRONMENT=Venture-v4 -e HOST_ADDRESS=ec2-13-55-27-20.ap-southeast-2.compute.amazonaws.com  cshenton/neuro:worker

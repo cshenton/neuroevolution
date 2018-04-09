@@ -33,12 +33,13 @@ class Worker:
             strength (float): The genetic mutation strength.
         """
         self.client = NeuroStub(grpc.insecure_channel(host))
-        print("Created Client at Host:", host)
         self.env = gym.make(env_name)
-        print("Made Environment:", env_name)
         self.policy = Policy(self.env.action_space.n)
         self.strength = strength
-        print("Set Mutation Strength:", strength)
+
+        print("Host:", host)
+        print("Environment:", env_name)
+        print("Mutation Strength:", strength)
 
     def seek(self):
         """Gets a new set of seeds to try from the master server.
