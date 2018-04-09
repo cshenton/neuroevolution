@@ -33,13 +33,12 @@ class Worker:
             strength (float): The genetic mutation strength.
         """
         self.client = NeuroStub(grpc.insecure_channel(host))
+        print("Created Client at Host:", host)
         self.env = gym.make(env_name)
+        print("Made Environment:", env_name)
         self.policy = Policy(self.env.action_space.n)
         self.strength = strength
-
-        print("Environment:", env_name)
-        print("Host:", host)
-        print("Mutation Strength:", strength)
+        print("Set Mutation Strength:", strength)
 
     def seek(self):
         """Gets a new set of seeds to try from the master server.
@@ -48,7 +47,7 @@ class Worker:
             seeds (list of ints): The seed sequence defining the next policy
                 to try out.
         """
-        return self.client.Seek(empty_pb2.Empty()).seeds
+        return self.client.Seek(empty_pb2.Empty(), timeout=30).seeds
 
     def show(self, seeds, score):
         """Sends the seeds and corresponding score to the master server.
@@ -57,12 +56,15 @@ class Worker:
             seeds (list of ints): The seed sequence defining a policy.
             score (float): The score it achieved on the environment.
         """
-        self.client.Show(Evaluation(
-            individual=Individual(
-                seeds=seeds,
+        self.client.Show(
+            Evaluation(
+                individual=Individual(
+                    seeds=seeds,
+                ),
+                score=score,
             ),
-            score=score,
-        ))
+            timeout=30,
+        )
 
     def run_one(self):
         """Gets, evaluates, and reports a policy."""
