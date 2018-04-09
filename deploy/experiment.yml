@@ -3,12 +3,6 @@ Description: Drone task definition, ECS service, and load balancer.
 
 Parameters:
 
-  targetRegion:
-
-  targetAZ:
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: ap-southeast-2b
-
   targetVPC:
     Type: AWS::EC2::VPC::Id
     Description: The VPC to run the experiment in.
@@ -35,15 +29,46 @@ Mappings:
 
 Resources:
 
+  ##############
+  ### MASTER ###
+  ##############
+
+  # Security group, ingress on 8090.
+  masterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: masterSecurity
+      GroupDescription: Security group for the master ECS cluster.
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "8090"
+          ToPort: "8090"
+      VpcId: !Ref targetVPC
+
+  # Log group for master logs.
+  masterLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: neuro-master-logs
+      RetentionInDays: 7
+
+  # ECS Cluster that the master is scheduled onto.
+  masterCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: masterCluster
+
+  # Instance launch configuration.
   masterLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", Image ]
+      ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
       InstanceType: c4.large
       AssociatePublicIpAddress: true
       IamInstanceProfile: ecsInstanceRole
       SecurityGroups:
-        - !ImportValue access-chronoClusterSecurity
+        - !Ref masterSecurityGroup
       BlockDeviceMappings:
         - DeviceName: /dev/xvdcz
           Ebs:
@@ -52,34 +77,52 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
            #!/bin/bash
-           echo ECS_CLUSTER=${chronoCluster} >> /etc/ecs/ecs.config
+           echo ECS_CLUSTER=${masterCluster} >> /etc/ecs/ecs.config
+
+  # Single instance autoscaling group.
   masterAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        - !ImportValue network-chronoSubnetAlpha
-        - !ImportValue network-chronoSubnetBeta
-        - !ImportValue network-chronoSubnetGamma
-      LaunchConfigurationName: !Ref chronoLaunchConfig
-      MinSize: '3'
-      MaxSize: '8'
-      DesiredCapacity: '3'
-      Tags:
+      AvailabilityZones:
+        Fn::GetAZs: !Ref "AWS::Region"
+      DesiredCapacity: '1'
+      LaunchConfigurationName: !Ref masterLaunchConfig
+      MinSize: '1'
+      MaxSize: '1'
+
+  # ECS Task, defines the master job to run.
+  masterTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: master
+      ContainerDefinitions:
         -
-          Key: Name
-          Value: ECS Instance - chronoCluster
-          PropagateAtLaunch: 'true'
-        -
-          Key: Description
-          Value: "This instance is part of the chronoCluster ECS autoscaling group."
-          PropagateAtLaunch: 'true'
+          Name: master
+          Image: cshenton/neuro:master
+          Cpu: 2048
+          MemoryReservation: 3000
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref masterLogGroup
+              awslogs-region: !Ref AWS::Region
+
+  # ECS Service, schedules the single master.
+  workerService:
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref masterTask
+      Cluster: !Ref masterCluster
+      DesiredCount: 1
+      Role: ecsServiceRole
+
 
 
   ###############
   ### WORKERS ###
   ###############
 
-  # Security group, no ingress
+  # Security group, no ingress.
   workerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -87,20 +130,20 @@ Resources:
       GroupDescription: Security group for the worker ECS cluster.
       VpcId: !Ref targetVPC
 
-  # Log group for worker logs
+  # Log group for worker logs.
   workerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: neuro-worker-logs
       RetentionInDays: 7
 
-  # ECS Cluster that workers are scheduled onto
+  # ECS Cluster that workers are scheduled onto.
   workerCluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: workerCluster
 
-  # Spot Fleet request, launches c4.larges into the ECS cluster
+  # Spot Fleet request, launches c4.larges into the ECS cluster.
   workerSpotFleet:
     Type: AWS::EC2::SpotFleet
     DependsOn: workerCluster
@@ -124,7 +167,7 @@ Resources:
         TerminateInstancesWithExpiration: true
         Type: maintain
 
-  # ECS Task, defines the worker job to run
+  # ECS Task, defines the worker job to run.
   workerTask:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -148,6 +191,7 @@ Resources:
               awslogs-group: !Ref workerLogGroup
               awslogs-region: !Ref AWS::Region
 
+  # ECS Service, schedules as many workers as the cluster can hold.
   workerService:
     Type: AWS::ECS::Service
     Properties:
