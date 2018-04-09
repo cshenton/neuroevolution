@@ -10,8 +10,8 @@ from worker.policy import Policy
 
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "Venture-v4")
-HOST = os.getenv("HOST", "127.0.0.1:8080")
-DEFAULT_STRENGTH = 0.005
+HOST = os.getenv("HOST_ADDRESS", "127.0.0.1") + os.getenv("HOST+PORT", "8080")
+MUTATION_STRENGTH = float(os.getenv("MUTATION_STRENGTH", "0.005"))
 
 
 class Worker:
@@ -24,7 +24,7 @@ class Worker:
         strength (float): The genetic mutation strength.
     """
 
-    def __init__(self, env_name=ENVIRONMENT, strength=DEFAULT_STRENGTH, host=HOST):
+    def __init__(self, env_name=ENVIRONMENT, strength=MUTATION_STRENGTH, host=HOST):
         """Creates a Worker instance.
 
         Args:

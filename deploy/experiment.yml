@@ -3,6 +3,10 @@ Description: Drone task definition, ECS service, and load balancer.
 
 Parameters:
 
+  targetAZ:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The availability zone to run the experiment in.
+
   targetVPC:
     Type: AWS::EC2::VPC::Id
     Description: The VPC to run the experiment in.
@@ -27,13 +31,14 @@ Mappings:
     ap-southeast-2:
       Image: ami-14b55f76
 
+
 Resources:
 
   ##############
   ### MASTER ###
   ##############
 
-  # Security group, ingress on 8090.
+  # Security group, ingress on 8080.
   masterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -42,8 +47,8 @@ Resources:
       SecurityGroupIngress:
         -
           IpProtocol: "tcp"
-          FromPort: "8090"
-          ToPort: "8090"
+          FromPort: "8080"
+          ToPort: "8080"
       VpcId: !Ref targetVPC
 
   # Log group for master logs.
@@ -59,36 +64,24 @@ Resources:
     Properties:
       ClusterName: masterCluster
 
-  # Instance launch configuration.
-  masterLaunchConfig:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  # EC2 on-demand instance that registers itself to the master cluster.
+  masterInstance:
+    Type: "AWS::EC2::Instance"
     Properties:
-      ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
-      InstanceType: c4.large
-      AssociatePublicIpAddress: true
-      IamInstanceProfile: ecsInstanceRole
-      SecurityGroups:
-        - !Ref masterSecurityGroup
       BlockDeviceMappings:
         - DeviceName: /dev/xvdcz
           Ebs:
             VolumeSize: 22
             VolumeType: gp2
+      IamInstanceProfile: ecsInstanceRole
+      ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
+      InstanceType: c4.large
+      SecurityGroups:
+        - !Ref masterSecurityGroup
       UserData:
         Fn::Base64: !Sub |
            #!/bin/bash
            echo ECS_CLUSTER=${masterCluster} >> /etc/ecs/ecs.config
-
-  # Single instance autoscaling group.
-  masterAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      AvailabilityZones:
-        Fn::GetAZs: !Ref "AWS::Region"
-      DesiredCapacity: '1'
-      LaunchConfigurationName: !Ref masterLaunchConfig
-      MinSize: '1'
-      MaxSize: '1'
 
   # ECS Task, defines the master job to run.
   masterTask:
@@ -101,6 +94,9 @@ Resources:
           Image: cshenton/neuro:master
           Cpu: 2048
           MemoryReservation: 3000
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 8080
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -115,7 +111,6 @@ Resources:
       Cluster: !Ref masterCluster
       DesiredCount: 1
       Role: ecsServiceRole
-
 
 
   ###############
@@ -155,6 +150,9 @@ Resources:
             IamInstanceProfile: ecsInstanceRole
             ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
             InstanceType: c4.large
+            Placement:
+              AvailabilityZone: !Ref targetAZ
+              GroupName: workerPlacementGroup
             SecurityGroups:
               - !Ref workerSecurityGroup
             UserData:
@@ -183,8 +181,11 @@ Resources:
               Name: ENVIRONMENT
               Value: !Ref targetEnvironment
             -
-              Name: HOST
-              Value: !!!!!!!!!!
+              Name: HOST_ADDRESS
+              Value: !GetAtt masterInstance.PublicDnsName
+            -
+              Name: HOST_PORT
+              Value: 8080
           LogConfiguration:
             LogDriver: awslogs
             Options:

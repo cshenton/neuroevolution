@@ -10,6 +10,8 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
     - environment
     - choice of vpc, etc.
 - first run
+- better ECS image map in cloudformation
+- full environment list in cloudformation
 
 
 ## Approach
@@ -49,7 +51,7 @@ Cloudformation scripts deploy the experiment. The following information is requi
 Then the cloudformation scripts create:
 - Master
     - Security group (Open on 80)
-    - Single machine auto-scaling group (c4.large)
+    - On-demand instance (c4.large)
     - ECS Task
     - Single container ECS Service
 - Workers
