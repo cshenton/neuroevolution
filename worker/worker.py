@@ -10,7 +10,7 @@ from worker.policy import Policy
 
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "Venture-v4")
-HOST = os.getenv("HOST_ADDRESS", "127.0.0.1") + os.getenv("HOST+PORT", "8080")
+HOST = os.getenv("HOST_ADDRESS", "127.0.0.1") + ":" + os.getenv("HOST_PORT", "8080")
 MUTATION_STRENGTH = float(os.getenv("MUTATION_STRENGTH", "0.005"))
 
 
@@ -36,6 +36,10 @@ class Worker:
         self.env = gym.make(env_name)
         self.policy = Policy(self.env.action_space.n)
         self.strength = strength
+
+        print("Environment:", env_name)
+        print("Host:", host)
+        print("Mutation Strength:", strength)
 
     def seek(self):
         """Gets a new set of seeds to try from the master server.
