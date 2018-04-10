@@ -28,21 +28,41 @@ Parameters:
   targetEnvironment:
     Type: String
     Default: Venture-v4
-    AllowedValues:
-      - Frostbite-v4
-      - Kangaroo-v4
-      - Pong-v4
-      - Venture-v4
-
 
 
 Mappings:
 
   regionMap:
+    us-east-2:
+      Image: ami-64300001
     us-east-1:
-      Image: ami-fad25980
+      Image: ami-aff65ad2
+    us-west-2:
+      Image: ami-40ddb938
+    us-west-1:
+      Image: ami-69677709
+    eu-west-3:
+      Image: ami-250eb858
+    eu-west-2:
+      Image: ami-2218f945
+    eu-west-1:
+      Image: ami-2d386654
+    eu-central-1:
+      Image: ami-9fc39c74
+    ap-northeast-2:
+      Image: ami-9d56f9f3
+    ap-northeast-1:
+      Image: ami-a99d8ad5
     ap-southeast-2:
-      Image: ami-14b55f76
+      Image: ami-efda148d
+    ap-southeast-1:
+      Image: ami-846144f8
+    ca-central-1:
+      Image: ami-897ff9ed
+    ap-south-1:
+      Image: ami-72edc81d
+    sa-east-1:
+      Image: ami-4a7e2826
 
 
 Resources:
@@ -90,6 +110,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
       RoleName: iamEcsInstanceRole
 
+  # Instance profile for spot fleet
   iamEcsInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -198,7 +219,8 @@ Resources:
     Properties:
       ClusterName: workerCluster
 
-  # Spot Fleet request, launches c5 9x and 18x larges into the ECS cluster.
+  # Spot Fleet request, launches c5.18xlarges into the ECS cluster. Also disables hyperthreading
+  # on startup, since we don't want contention over the single floating point cores.
   workerSpotFleet:
     Type: AWS::EC2::SpotFleet
     DependsOn: masterService
