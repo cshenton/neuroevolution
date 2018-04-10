@@ -13,7 +13,7 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 - Another run (maybe one not done by Uber?)
 - better ECS image map in cloudformation
     - also note that you need to open spot fleet in console to create role
-- AXC compiled tensorflow in docker image (c5s support this)
+- AVX2 compiled tensorflow in docker image (c5s support this)
 
 
 ## Approach
@@ -65,24 +65,24 @@ Then the cloudformation scripts create:
     - Log group
 - Workers
     - Security group (no ingress)
-    - Spot fleet of desired size (`c5.9xlarge`, `c5.18xlarge`)
+    - Spot fleet of desired size (`c5.18xlarge`)
     - ECS Task (1 vCPU per container)
     - ECS Service with `numWorkers` tasks
     - Log group
 
-With a spot bid price of 0.02 per vCPU per hour. So running 720 workers (like in the Uber paper)
-for an hour will cost at most `0.02*720 + 0.1 = $14.5`. More likely is a price around `0.013` per
-vCPU hour, meaning a per hour cluster cost of `$9.48`. Note in the template that the request is
-fulfilled with high capacity c5.9xlarge and c5.18xlarge instances, in order to reach the desired
-cpu count while remaining under the default 20 spot instance per region limit.
+Unfortunately, AWS limits spot fleets to 360 vCPUs per account by default, which is 180 discrete
+cpu cores. Therefore, we run 180 workers by default, and larger attempts will fail to fulfill
+the bigger spot request.
+
+Running this 180 worker fleet for an hour costs at most `0.04*180 + 0.1 = $7.3`, with more likely
+prices hovering around `$4.80`.
 
 For comparison, a p3 instance in the same region (`ap-southeast-2`) costs `$12.24` per hour for a
 four NVIDIA Tesla V100 GPU instance.
 
+
 ## Comments
 
-- Using more efficient run time language for master pays off, seamless handles 100s of workers.
--
 
 
 ## Protobufs
