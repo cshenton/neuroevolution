@@ -1,4 +1,5 @@
 """The Worker class, which manages running policy evaluations."""
+import datetime
 import grpc
 import gym
 import os
@@ -69,8 +70,11 @@ class Worker:
 
     def run_one(self):
         """Gets, evaluates, and reports a policy."""
+        t = datetime.datetime.now()
         seeds = self.seek()
         self.policy.set_weights(seeds, self.strength)
+        setup_time = datetime.datetime.now() - t
+        t = datetime.datetime.now()
         i = 0
         score = 0
         done = False
@@ -79,10 +83,19 @@ class Worker:
             action = self.policy.act(state)
             state, reward, done, _ = self.env.step(action)
             score += reward
-            if i >= 20000:
-                break
+            i += 1
+            # if i >= 20000:
+            #     break
         self.show(seeds, score)
-        print(score, seeds)
+        run_time = datetime.datetime.now() - t
+        print(
+            "Score: ", score,
+            "Seeds: ", seeds,
+            "Frames: ", i,
+            "Setup Time: ", setup_time,
+            "Run Time: ", run_time,
+            "FPS during run: ", i / run_time.total_seconds()
+        )
 
     def run(self):
         """Repeatedly gets, evaluates, and reports a policy."""

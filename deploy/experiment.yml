@@ -127,7 +127,7 @@ Resources:
       AvailabilityZone: !Ref targetAZ
       IamInstanceProfile: !Ref iamEcsInstanceProfile
       ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
-      InstanceType: c4.large
+      InstanceType: c5.large
       SecurityGroupIds:
         - !Ref masterSecurityGroup
       UserData:
@@ -144,8 +144,6 @@ Resources:
         -
           Name: master
           Image: cshenton/neuro:master
-          Cpu: 2048
-          MemoryReservation: 3000
           PortMappings:
             -
               ContainerPort: 8080
@@ -238,8 +236,6 @@ Resources:
         -
           Name: worker
           Image: cshenton/neuro:worker
-          Cpu: 1024
-          MemoryReservation: 1500
           Environment:
             -
               Name: ENVIRONMENT
