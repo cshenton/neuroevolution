@@ -32,7 +32,7 @@ class Policy:
         self.sess = tf.Session()
 
         # Generate initialized weights once.
-        init = tf.contrib.layers.variance_scaling_initializer(seed=42)
+        init = tf.contrib.layers.variance_scaling_initializer(seed=1234)
         self.inits = self.sess.run([
             init([8, 8, 3, 16]),
             init([4, 4, 16, 32]),
