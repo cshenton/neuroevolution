@@ -16,7 +16,9 @@ Parameters:
   targetWorkers:
     Type: Number
     Default: 720
-    Description: The number of worker vCPUs to run. Default is 720 (same as Uber paper).
+    Description: >
+      The number of worker vCPUs to run. Default is 720 (same as Uber paper).
+      Should be a multiple of 36, since large machines are provisioned.
 
   targetEnvironment:
     Type: String
@@ -188,7 +190,7 @@ Resources:
     Properties:
       ClusterName: workerCluster
 
-  # Spot Fleet request, launches c4.larges into the ECS cluster.
+  # Spot Fleet request, launches c5 9x and 18x larges into the ECS cluster.
   workerSpotFleet:
     Type: AWS::EC2::SpotFleet
     DependsOn: masterService
@@ -200,7 +202,7 @@ Resources:
             IamInstanceProfile:
               Arn: !GetAtt iamEcsInstanceProfile.Arn
             ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
-            InstanceType: c4.large
+            InstanceType: c5.9xlarge
             SecurityGroups:
               -
                 GroupId: !Ref workerSecurityGroup
@@ -208,8 +210,21 @@ Resources:
               Fn::Base64: !Sub |
                 #!/bin/bash
                 echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
-            WeightedCapacity: 2
-        SpotPrice: '0.0175' # 0.035 / 2 since spot price is weighted by capacity (which is vCPUs here)
+            WeightedCapacity: 36
+          -
+            IamInstanceProfile:
+              Arn: !GetAtt iamEcsInstanceProfile.Arn
+            ImageId: !FindInMap [ regionMap, !Ref "AWS::Region", Image ]
+            InstanceType: c5.18xlarge
+            SecurityGroups:
+              -
+                GroupId: !Ref workerSecurityGroup
+            UserData:
+              Fn::Base64: !Sub |
+                #!/bin/bash
+                echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
+            WeightedCapacity: 72
+        SpotPrice: '0.02'
         TargetCapacity: !Ref targetWorkers
         TerminateInstancesWithExpiration: true
         Type: maintain

@@ -2,17 +2,18 @@
 
 Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06567.pdf).
 
+> Graph of training curve goes here
 
 ## ToDo
 
-- cloudformation scripts for first run
-    - num workers
-    - environment
-    - choice of vpc, etc.
-- first run
+- Target larger instances in spot fleet
+- Monitor logs to .txt file
+- Run full scale Venture-v4 run
+- full environment list in cloudformation
+- Another run (maybe one not done by Uber?)
 - better ECS image map in cloudformation
     - also note that you need to open spot fleet in console to create role
-- full environment list in cloudformation
+
 
 
 ## Approach
@@ -33,6 +34,8 @@ and requires workers to synchronise.
 
 ## Deployment
 
+### Building Images
+
 Both master and worker are packaged as docker containers. Either pull the containers from docker-hub,
 or build them yourself:
 ```
@@ -45,30 +48,40 @@ docker build -t cshenton/neuro:worker -f worker/Dockerfile .
 docker build -t cshenton/neuro:master -f master/Dockerfile .
 ```
 
+### Launching Cluster
+
 Cloudformation scripts deploy the experiment. The following information is required:
 - Availability Zone
-- Target VPC
+- VPC
+- Gym Environment Name
+- Number of workers
 
 Then the cloudformation scripts create:
 - Master
-    - Security group (Open on 80)
-    - On-demand instance (c4.large)
+    - Security group (Open on 8080)
+    - On-demand instance (`c4.large`)
     - ECS Task
     - Single container ECS Service
+    - Log group
 - Workers
     - Security group (no ingress)
-    - Spot instance auto-scaling group of desired size (c4.large)
+    - Spot fleet of desired size (`c5.9xlarge`, `c5.18xlarge`)
     - ECS Task (1 vCPU per container)
     - ECS Service with 4 * nMachines tasks
+    - Log group
 
-The spot price I'm working against is $0.0307 for the c4.large, which at a budget of $0.035 is at most
-$0.0175 per vCPU per hour. Therefore, running a 1 master, 499 worker fleet for an hour will mean 998
-separate worker processes, and will cost:
-```
-(1 + 499) * 0.035 = $17.50
-```
-Which is pretty affordable, considering the
+With a spot bid price of 0.0175 per vCPU per hour. So running 720 workers (like in the Uber paper)
+for an hour will cost `0.0175*720 + 0.1 = $12.7`. Note in the template that the request is fulfilled
+with high capacity c5.9xlarge and c5.18xlarge instances, in order to reach the desired cpu count
+while remaining under the default 20 spot instance per region limit.
 
+For comparison, a p3 instance in the same region (`ap-southeast-2`) costs `$12.24` per hour for a
+four NVIDIA Tesla V100 GPU instance.
+
+## Comments
+
+- Using more efficient run time language for master pays off, seamless handles 100s of workers.
+-
 
 
 ## Protobufs
@@ -83,40 +96,3 @@ python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grp
 # golang
 protoc -I . proto/neuroevolution.proto --go_out=plugins=grpc:.
 ```
-
-
-```python
-import datetime
-import gym
-import numpy as np
-
-from worker.policy import Policy
-
-# How long does it take to initialize on a 10 seed individual?
-seeds = np.random.randint(1e8, size=10)
-p = Policy(6)
-t = datetime.datetime.now()
-p.set_weights(seeds, 0.005)
-print("initialization time:", datetime.datetime.now() - t) # 0:00:02.267878
-
-e = gym.make('Pong-v0')
-
-# How long does it take to do 20sk frames (max evaluation length)
-t = datetime.datetime.now()
-
-for i in range(10):
-    seeds = np.random.randint(1e8, size=10)
-    p.set_weights(seeds, 0.005)
-    j = 0
-    done = False
-    state = e.reset()
-    while not done:
-        action = p.act(state)
-        state, reward, done, _ = e.step(action)
-        j += 1
-    print("episode {} took {} steps".format(i, j))
-
-print("10 episodes took:", datetime.datetime.now() - t) # 0:00:44.055469
-```
-
-docker run -e ENVIRONMENT=Venture-v4 -e HOST_ADDRESS=ec2-13-55-27-20.ap-southeast-2.compute.amazonaws.com  cshenton/neuro:worker

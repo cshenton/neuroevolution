@@ -7,7 +7,7 @@ from proto.neuroevolution_pb2_grpc import NeuroStub
 from proto.neuroevolution_pb2 import Top
 
 
-HOST = "127.0.0.1:8080"
+HOST = "ec2-13-211-134-103.ap-southeast-2.compute.amazonaws.com:8080"
 
 client = NeuroStub(grpc.insecure_channel(HOST))
 
