@@ -214,6 +214,10 @@ Resources:
               Fn::Base64: !Sub |
                 #!/bin/bash
                 echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
+                for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un)
+                do
+                  echo 0 > /sys/devices/system/cpu/cpu$cpunum/online
+                done
             WeightedCapacity: 36
         SpotPrice: '0.04'
         TargetCapacity: !Ref targetWorkers
