@@ -29,15 +29,22 @@ class Policy:
             n_actions (int): Dimension of softmax action policy output.
         """
         self.n_actions = n_actions
+        self.sess = tf.Session()
 
-        # Initializer with fixed seed
+        # Generate initialized weights once.
         init = tf.contrib.layers.variance_scaling_initializer(seed=42)
+        self.inits = self.sess.run([
+            init([8, 8, 3, 16]),
+            init([4, 4, 16, 32]),
+            init([17280, 256]),
+            init([256, n_actions]),
+        ])
 
         # Weights Variables
-        conv1 = tf.Variable(init([8, 8, 3, 16]), trainable=False)
-        conv2 = tf.Variable(init([4, 4, 16, 32]), trainable=False)
-        dens1 = tf.Variable(init([17280, 256]), trainable=False)
-        dens2 = tf.Variable(init([256, n_actions]), trainable=False)
+        conv1 = tf.Variable(tf.zeros([8, 8, 3, 16]), trainable=False)
+        conv2 = tf.Variable(tf.zeros([4, 4, 16, 32]), trainable=False)
+        dens1 = tf.Variable(tf.zeros([17280, 256]), trainable=False)
+        dens2 = tf.Variable(tf.zeros([256, n_actions]), trainable=False)
         self.weights = [conv1, conv2, dens1, dens2]
 
         # Feed forward network defined with functional ops
@@ -53,8 +60,6 @@ class Policy:
         x = tf.matmul(x, dens2)
         self.logits = x
         self.action = tf.multinomial(self.logits, 1)
-
-        self.sess = tf.Session()
 
     def act(self, state):
         """Computes a forward pass through the policy graph, returns an action.
@@ -84,12 +89,11 @@ class Policy:
                 random perturbation of the network weights.
             strength (float): The mutation strength or random scale.
         """
-        self.sess.run(tf.global_variables_initializer())
         rands = [np.random.RandomState(s) for s in seeds]
 
-        for w in self.weights:
-            new_w = self.sess.run(w)
-            size = new_w.shape
+        for w, i in zip(self.weights, self.inits):
+            new_w = np.copy(i)
+            size = i.shape
             for r in rands:
                 new_w += r.normal(0, strength, size=size)
             w.load(new_w, self.sess)

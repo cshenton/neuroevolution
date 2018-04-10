@@ -144,6 +144,7 @@ Resources:
         -
           Name: master
           Image: cshenton/neuro:master
+          MemoryReservation: 3000
           PortMappings:
             -
               ContainerPort: 8080
@@ -236,6 +237,7 @@ Resources:
         -
           Name: worker
           Image: cshenton/neuro:worker
+          MemoryReservation: 1500
           Environment:
             -
               Name: ENVIRONMENT

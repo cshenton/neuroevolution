@@ -84,8 +84,8 @@ class Worker:
             state, reward, done, _ = self.env.step(action)
             score += reward
             i += 1
-            # if i >= 20000:
-            #     break
+            if i >= 20000:
+                break
         self.show(seeds, score)
         run_time = datetime.datetime.now() - t
         print(
