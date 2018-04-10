@@ -89,6 +89,7 @@ class Policy:
                 random perturbation of the network weights.
             strength (float): The mutation strength or random scale.
         """
+        self.sess.run(tf.global_variables_initializer())
         rands = [np.random.RandomState(s) for s in seeds]
 
         for w, i in zip(self.weights, self.inits):

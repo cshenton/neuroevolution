@@ -15,9 +15,14 @@ Parameters:
 
   targetWorkers:
     Type: Number
-    Default: 720
+    Default: 180
     Description: >
-      The number of worker vCPUs to run. Default is 720 (same as Uber paper).
+      The number of worker cpu cores. This will be 1/2 the number of underlying
+      vCPUs (which are just hyperthreads). This defaults to 180, since that is the
+      maximum number of discrete spot market CPU cores one can provision without
+      an increased allowance through AWS support, this is 1/4 of the discrete cores
+      used in the Uber paper.
+
       Should be a multiple of 36, since large machines are provisioned.
 
   targetEnvironment:
@@ -209,7 +214,7 @@ Resources:
               Fn::Base64: !Sub |
                 #!/bin/bash
                 echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
-            WeightedCapacity: 36
+            WeightedCapacity: 18
           -
             IamInstanceProfile:
               Arn: !GetAtt iamEcsInstanceProfile.Arn
@@ -222,8 +227,8 @@ Resources:
               Fn::Base64: !Sub |
                 #!/bin/bash
                 echo ECS_CLUSTER=${workerCluster} >> /etc/ecs/ecs.config
-            WeightedCapacity: 72
-        SpotPrice: '0.02'
+            WeightedCapacity: 36
+        SpotPrice: '0.04'
         TargetCapacity: !Ref targetWorkers
         TerminateInstancesWithExpiration: true
         Type: maintain
@@ -237,7 +242,7 @@ Resources:
         -
           Name: worker
           Image: cshenton/neuro:worker
-          MemoryReservation: 1500
+          MemoryReservation: 750
           Environment:
             -
               Name: ENVIRONMENT
