@@ -61,6 +61,9 @@ class Policy:
         self.logits = x
         self.action = tf.multinomial(self.logits, 1)
 
+        # Initialize once
+        self.sess.run(tf.global_variables_initializer())
+
     def act(self, state):
         """Computes a forward pass through the policy graph, returns an action.
 
@@ -89,7 +92,6 @@ class Policy:
                 random perturbation of the network weights.
             strength (float): The mutation strength or random scale.
         """
-        self.sess.run(tf.global_variables_initializer())
         rands = [np.random.RandomState(s) for s in seeds]
 
         for w, i in zip(self.weights, self.inits):

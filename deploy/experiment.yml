@@ -29,8 +29,9 @@ Parameters:
     Type: String
     Default: Venture-v4
     AllowedValues:
+      - Frostbite-v4
+      - Kangaroo-v4
       - Pong-v4
-      - Skiing-v4
       - Venture-v4
 
 
