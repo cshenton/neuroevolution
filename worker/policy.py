@@ -59,7 +59,7 @@ class Policy:
         x = tf.nn.relu(tf.layers.batch_normalization(x))
         x = tf.matmul(x, dens2)
         self.logits = x
-        self.action = tf.multinomial(self.logits, 1)
+        self.action = tf.argmax(self.logits, 1)
 
         # Initialize once
         self.sess.run(tf.global_variables_initializer())
