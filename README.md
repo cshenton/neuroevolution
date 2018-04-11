@@ -6,7 +6,6 @@ Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06
 
 ## ToDo
 
-- test speed locally with limited docker cpu alloc
 - Monitor logs to .txt file
 - Run full scale Venture-v4 run
 - full environment list in cloudformation

@@ -1,5 +1,6 @@
 """Simple monitoring script for a run."""
 import grpc
+import os
 import time
 
 from google.protobuf import empty_pb2
@@ -7,7 +8,7 @@ from proto.neuroevolution_pb2_grpc import NeuroStub
 from proto.neuroevolution_pb2 import Top
 
 
-HOST = "ec2-13-211-123-3.ap-southeast-2.compute.amazonaws.com:8080"
+HOST = os.getenv("HOST") + ":8080"
 
 client = NeuroStub(grpc.insecure_channel(HOST))
 

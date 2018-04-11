@@ -75,7 +75,7 @@ class Policy:
         """
         a = self.sess.run(self.action, feed_dict={self.input: np.expand_dims(state, 0)})
 
-        action = a[0][0]
+        action = a[0]
         return action
 
     def set_weights(self, seeds, strength):
