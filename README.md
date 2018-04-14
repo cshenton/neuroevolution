@@ -2,7 +2,7 @@
 
 Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06567.pdf).
 
-[![Frostbite Agent](img/frostbite.png | width=100)](https://www.youtube.com/watch?v=rotoBxjUBmM)
+[![Frostbite Agent](img/frostbite.png)](https://www.youtube.com/watch?v=rotoBxjUBmM)
 
 > Graph of training curve goes here
 
