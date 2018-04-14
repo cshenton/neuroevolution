@@ -89,6 +89,7 @@ func (p *Population) Evaluate(e *proto.Evaluation) {
 		// Get best individual, score
 		best := p.Elites[p.EliteSize-1]
 		bestScore := p.Scores[p.EliteSize-1]
+		fmt.Printf("Generation scores: %v\n", p.Scores)
 		fmt.Printf("Top in gen: %v, with score %v\n", best, bestScore)
 
 		// Progress a generation

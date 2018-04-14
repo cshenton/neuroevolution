@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const eliteSize = 10
+const eliteSize = 50
 const genSize = 5000
 
 // Server is the genetic algorithm server.
