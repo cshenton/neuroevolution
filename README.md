@@ -1,111 +1,56 @@
-# Neuroevolution
+# Neuroevolution for Reinforcement Learning
 
 Replication of [Uber AI Labs Neuroevolution paper](https://arxiv.org/pdf/1712.06567.pdf).
 
+This is a complete rewrite of the code from OpenAI, Uber. The worker is implemented in tensorflow, and uses gym.
+Workers communicate directly with a master Go server using gRPC. See `worker/` and `master/` for the code and
+`proto/` for the generates stubs.
+
+Click the images to see the trained agents in action. To my knowledge, this ice-hockey agent is *state-of-the-art.*
+
 [![Frostbite Agent](img/frostbite.png)](https://www.youtube.com/watch?v=rotoBxjUBmM)
-
-> Graph of training curve goes here
-
-## ToDo
-
-- Run on a second environment
-- Training graph in readme
-- Video in readme
-- Find a nice way to store and show found policy seeds
-- Polish and finish
-
-
-## Approach
-
-I use a master-worker architecture, with:
-
-- Golang master
-    - gRPC server that controls the genetic algorithm internals
-    - Sends sequences of seeds (individuals) to workers
-- Python workers
-    - Each has a copy of the policy network and environment
-    - Swaps out full network weights on each evaluation (without rebuilding network)
-    - Sends seeds and their scores back to master
-
-This results in a simpler system than Uber / OpenAIs approach, which uses redis as an intermediary,
-and requires workers to synchronise.
 
 
 ## Deployment
 
-### Building Images
+Deployment is done on AWS with cloudformation, allowing for one click deployment of an experiment with 100s of
+workers, see `deploy/` for details.
 
-Both master and worker are packaged as docker containers. Either pull the containers from docker-hub,
-or build them yourself:
-```
-# Download
-docker pull cshenton/neuro:worker
-docker pull cshenton/neuro:master
+Master is deployed on a dedicated EC2 instance, workers are provisioned on a spot fleet with 180-720 discrete cpu
+cores. Both master and worker are packaged as docker images [available here](http://dockerhub.com/r/cshenton/neuro).
 
-# Build
-docker build -t cshenton/neuro:worker -f worker/Dockerfile .
-docker build -t cshenton/neuro:master -f master/Dockerfile .
-```
-
-### Launching Cluster
-
-Cloudformation scripts deploy the experiment. The following information is required:
-- Availability Zone
-- VPC
-- Gym Environment Name
-- Number of workers
-
-Then the cloudformation scripts create:
-- Master
-    - Security group (Open on 8080)
-    - On-demand instance (`c5.large`)
-    - ECS Task
-    - Single container ECS Service
-    - Log group
-- Workers
-    - Security group (no ingress)
-    - Spot fleet of desired size (`c5.18xlarge`)
-    - ECS Task (1 vCPU per container)
-    - ECS Service with `numWorkers` tasks
-    - Log group
-
-Unfortunately, AWS limits spot fleets to 360 vCPUs per account by default, which is 180 discrete
-cpu cores. Therefore, we run 180 workers by default, and larger attempts will fail to fulfill
-the bigger spot request.
-
-Running this 180 worker fleet for an hour costs at most `0.04*180 + 0.1 = $7.3`, with more likely
-prices hovering around `$4.80`.
-
-For comparison, a p3 instance in the same region (`ap-southeast-2`) costs `$12.24` per hour for a
-four NVIDIA Tesla V100 GPU instance.
+As far as HPC experiments go, this one is in the affordable range. Reaching 1 billion frames requires around
+900 cpu core hours, which costs between $25-75USD on the AWS spot market. However, running the full atari suite
+up to 4 billion frames would cost some thousands of dollars.
 
 
 ## Discussion
 
-I'd recommend keeping a slightly larger truncated population (50, instead of 10 in the paper). This
-keeps the population robust to domination by individuals who had lucky runs, and achieved evaluation
-scores high above their average.
+The simple master-worker architecutre made this a pleasure to implement, and cpu load on the master indicates
+that it could seamlessly handle 200,000+ workers if need be (and more on a larger server). However I have some
+observations on the limitations of this method for training policy networks:
 
-Otherwise, the vanilla GA with a single run tends to reward policies with high variance. Maintaining
-a larger truncated population is a cheaper solution to this than doing multiple evaluation runs per
-candidate policy.
+- Vanilla GA is very susceptible to stochastic rewards
+    - The elite run won't be the best policy
+    - A lucky run from a poor policy can remain the elite for many generations
+- As seeds get longer, network construction starts to dominate evaluation costs
+    - Eventually this will crossover serialisation costs, quicker for smaller nets
+
+Some performance enhancements that could be made to this implementation include.
+
+- Compiling tensorflow to use AVX2, FMA instructions.
+- Making sure docker doesn't share floating point cores between containers.
 
 
+## ToDo
 
-## Protobufs
+- Experiment 2
+- Training Graphs
+- Videos
+- Utilities for trying out policies
 
-`gRPC` is used to enable simple communication between workers and master. Server, client stubs
-are generated as follows.
 
-```
-# python
-python -m grpc_tools.protoc -I . proto/neuroevolution.proto --python_out=. --grpc_python_out=.
-
-# golang
-protoc -I . proto/neuroevolution.proto --go_out=plugins=grpc:.
-```
-
-# Some policies
+### Some policies
 
 [4070460811, 2393459932, 3391677529, 3126527182, 1530841827, 551825296, 2788280626, 3259895649, 491621571, 1975069066, 2436286981, 1561675863, 1783350318, 1327606738, 2368546632, 1861319266, 2926076564, 3244028662, 770972465, 682803462, 4187104692, 1531762673, 227312423, 687820495, 2693349394, 3452885796, 1637163948, 1847219188, 3239734781, 546358686, 3663099671, 2948785697, 2098781916, 3154979704, 3257521261, 4184203103, 1885360337, 2130262694]
 
