@@ -8,8 +8,8 @@ Workers communicate directly with a master Go server using gRPC. See `worker/` a
 
 Click the images below to see the trained agents in action. To my knowledge, this ice-hockey agent is *state-of-the-art.*
 
-[![Ice Hockey Agent](img/icehockey.png)](https://www.youtube.com/watch?v=y6nZ2uVKKO8)
-[![Frostbite Agent](img/frostbite.png)](https://www.youtube.com/watch?v=rotoBxjUBmM)
+[![Ice Hockey Agent](img/ih.png)](https://www.youtube.com/watch?v=y6nZ2uVKKO8)
+[![Frostbite Agent](img/fb.png)](https://www.youtube.com/watch?v=rotoBxjUBmM)
 
 
 
