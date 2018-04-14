@@ -25,4 +25,4 @@ def record_episode(env_name, seed):
         action = p.act(state)
         state, reward, done, _ = env.step(action)
         score += reward
-    print("Final Score: ", score)
+    return score
