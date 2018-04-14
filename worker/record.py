@@ -20,6 +20,9 @@ def record_episode(env_name, seed):
 
     done = False
     state = env.reset()
+    score = 0
     while not done:
         action = p.act(state)
         state, reward, done, _ = env.step(action)
+        score += reward
+    print("Final Score: ", score)
